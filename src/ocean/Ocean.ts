@@ -1,31 +1,23 @@
 import deprecated from "deprecated-decorator"
 
+import OceanAccounts from "./OceanAccounts"
+import OceanAgreements from "./OceanAgreements"
+import OceanAssets from "./OceanAssets"
+
 import AquariusProvider from "../aquarius/AquariusProvider"
 import SearchQuery from "../aquarius/query/SearchQuery"
 import BrizoProvider from "../brizo/BrizoProvider"
 import ConfigProvider from "../ConfigProvider"
-import Authentication from "../ddo/Authentication"
-import Condition from "../ddo/Condition"
-import Contract from "../ddo/Contract"
 import DDO from "../ddo/DDO"
-import Event from "../ddo/Event"
-import EventHandler from "../ddo/EventHandler"
 import MetaData from "../ddo/MetaData"
-import PublicKey from "../ddo/PublicKey"
 import Service from "../ddo/Service"
 import ContractEvent from "../keeper/Event"
-import Keeper from "../keeper/Keeper"
-import Web3Provider from "../keeper/Web3Provider"
 import Config from "../models/Config"
-import ValueType from "../models/ValueType"
 import SecretStoreProvider from "../secretstore/SecretStoreProvider"
 import Logger from "../utils/Logger"
 import Account from "./Account"
 import DID from "./DID"
-import IdGenerator from "./IdGenerator"
 import ServiceAgreement from "./ServiceAgreements/ServiceAgreement"
-import ServiceAgreementTemplate from "./ServiceAgreements/ServiceAgreementTemplate"
-import Access from "./ServiceAgreements/Templates/Access"
 
 import EventListener from "../keeper/EventListener"
 
@@ -43,7 +35,9 @@ export default class Ocean {
         if (!Ocean.instance) {
             ConfigProvider.setConfig(config)
             Ocean.instance = new Ocean()
-            Ocean.instance.keeper = await Keeper.getInstance()
+            Ocean.instance.accounts = await OceanAccounts.getInstance()
+            Ocean.instance.assets = await OceanAssets.getInstance()
+            Ocean.instance.agreements = await OceanAgreements.getInstance()
         }
 
         return Ocean.instance
@@ -56,215 +50,103 @@ export default class Ocean {
     private static instance: Ocean = null
 
     /**
-     * Keeper instance.
-     * @type {Keeper}
+     * Ocean account submodule
+     * @type {OceanAccounts}
      */
-    private keeper: Keeper
+    public accounts: OceanAccounts
+
+    /**
+     * Ocean assets submodule
+     * @type {OceanAssets}
+     */
+    public assets: OceanAssets
+
+    /**
+     * Ocean agreements submodule
+     * @type {OceanAgreements}
+     */
+    public agreements: OceanAgreements
 
     private constructor() {
     }
 
     /**
      * Returns the list of accounts.
+     * @deprecated Replace by [Ocean.accounts.list]{@link #OceanAccounts.list}
      * @return {Promise<Account[]>}
      */
+    @deprecated("OceanAccounts.list")
     public async getAccounts(): Promise<Account[]> {
-
-        // retrieve eth accounts
-        const ethAccounts = await Web3Provider.getWeb3().eth.getAccounts()
-
-        return ethAccounts.map((address: string) => new Account(address))
+        return await this.accounts.list()
     }
 
     /**
      * Returns a DDO by DID.
-     * @deprecated Replace by {@link #resolveAssetDID}
+     * @deprecated Replace by [Ocean.assets.resolve]{@link #OceanAssets.resolve}
      * @param  {string} did Decentralized ID.
      * @return {Promise<DDO>}
      */
-    @deprecated("resolveAssetDID")
+    @deprecated("OceanAssets.resolve")
     public async resolveDID(did: string): Promise<DDO> {
-        return await this.resolveAssetDID(did)
+        return await this.assets.resolve(did)
     }
 
     /**
      * Returns a DDO by DID.
+     * @deprecated Replace by [Ocean.assets.resolve]{@link #OceanAssets.resolve}
      * @param  {string} did Decentralized ID.
      * @return {Promise<DDO>}
      */
+    @deprecated("OceanAssets.resolve")
     public async resolveAssetDID(did: string): Promise<DDO> {
-        const d: DID = DID.parse(did)
-        return AquariusProvider.getAquarius().retrieveDDO(d)
+        return await this.assets.resolve(did)
     }
 
     /**
      * Registers a new DDO.
+     * @deprecated Replace by [Ocean.assets.create]{@link #OceanAssets.create}
      * @param  {MetaData} metadata DDO metadata.
      * @param  {Account} publisher Publicher account.
      * @return {Promise<DDO>}
      */
+    @deprecated("OceanAssets.create")
     public async registerAsset(metadata: MetaData, publisher: Account): Promise<DDO> {
-        const {didRegistry} = this.keeper
-        const aquarius = AquariusProvider.getAquarius()
-        const brizo = BrizoProvider.getBrizo()
-
-        const did: DID = DID.generate()
-        const accessServiceDefinitionId: string = "0"
-        const computeServiceDefintionId: string = "1"
-        const metadataServiceDefinitionId: string = "2"
-
-        metadata.base.contentUrls =
-            [await SecretStoreProvider.getSecretStore()
-                .encryptDocument(did.getId(), metadata.base.contentUrls)]
-
-        const template = new Access()
-        const serviceAgreementTemplate = new ServiceAgreementTemplate(template)
-
-        const conditions: Condition[] = await serviceAgreementTemplate.getConditions(metadata, did.getId())
-
-        const serviceEndpoint = aquarius.getServiceEndpoint(did)
-
-        // create ddo itself
-        const ddo: DDO = new DDO({
-            authentication: [{
-                type: "RsaSignatureAuthentication2018",
-                publicKey: did.getDid() + "#keys-1",
-            } as Authentication],
-            id: did.getDid(),
-            publicKey: [
-                {
-                    id: did.getDid() + "#keys-1",
-                    type: "Ed25519VerificationKey2018",
-                    owner: did.getDid(),
-                    publicKeyBase58: await publisher.getPublicKey(),
-                } as PublicKey,
-            ],
-            service: [
-                {
-                    type: template.templateName,
-                    purchaseEndpoint: brizo.getPurchaseEndpoint(),
-                    serviceEndpoint: brizo.getConsumeEndpoint(),
-                    // the id of the service agreement?
-                    serviceDefinitionId: accessServiceDefinitionId,
-                    // the id of the service agreement template
-                    templateId: serviceAgreementTemplate.getId(),
-                    serviceAgreementContract: {
-                        contractName: "ServiceAgreement",
-                        fulfillmentOperator: template.fulfillmentOperator,
-                        events: [
-                            {
-                                name: "ExecuteAgreement",
-                                actorType: "consumer",
-                                handler: {
-                                    moduleName: "payment",
-                                    functionName: "lockPayment",
-                                    version: "0.1",
-                                } as EventHandler,
-                            } as Event,
-                        ],
-                    } as Contract,
-                    conditions,
-                } as Service,
-                {
-                    type: "Compute",
-                    serviceEndpoint: brizo.getComputeEndpoint(publisher.getId(),
-                        computeServiceDefintionId, "xxx", "xxx"),
-                    serviceDefinitionId: computeServiceDefintionId,
-                } as Service,
-                {
-                    type: "Metadata",
-                    serviceEndpoint,
-                    serviceDefinitionId: metadataServiceDefinitionId,
-                    metadata,
-                } as Service,
-            ],
-        })
-
-        const storedDdo = await aquarius.storeDDO(ddo)
-
-        // Logger.log(JSON.stringify(storedDdo, null, 2))
-
-        await didRegistry.registerAttribute(
-            did.getId(),
-            ValueType.URL,
-            "Metadata",
-            serviceEndpoint,
-            publisher.getId())
-
-        return storedDdo
+        return await this.assets.create(metadata, publisher)
     }
 
     /**
      * Signs a service agreement by DID.
-     * @deprecated Replace by {@link #purchaseAssetService}
+     * @deprecated Replace by [Ocean.assets.order]{@link #OceanAssets.order}
      * @param  {string} did Decentralized ID.
      * @param  {string} serviceDefinitionId Service definition ID.
      * @param  {Account} consumer Consumer account.
      * @return {Promise<any>}
      *
      */
-    @deprecated("purchaseAssetService")
+    @deprecated("OceanAssets.order")
     public async signServiceAgreement(
         did: string,
         serviceDefinitionId: string,
         consumer: Account,
     ): Promise<any> {
-        return await this.purchaseAssetService(did, serviceDefinitionId, consumer)
+        return await this.assets.order(did, serviceDefinitionId, consumer)
     }
 
     /**
      * Signs a service agreement by DID.
+     * @deprecated Replace by [Ocean.assets.order]{@link #OceanAssets.order}
      * @param  {string} did Decentralized ID.
      * @param  {string} serviceDefinitionId Service definition ID.
      * @param  {Account} consumer Consumer account.
      * @return {Promise<any>}
      */
+    @deprecated("OceanAssets.order")
     public async purchaseAssetService(
         did: string,
         serviceDefinitionId: string,
         consumer: Account,
     ): Promise<any> {
-
-        const d: DID = DID.parse(did as string)
-        const ddo = await AquariusProvider.getAquarius().retrieveDDO(d)
-        const serviceAgreementId: string = IdGenerator.generateId()
-
-        try {
-            const serviceAgreementSignature: string = await ServiceAgreement.signServiceAgreement(
-                ddo, serviceDefinitionId, serviceAgreementId, consumer)
-
-            const accessService: Service = ddo.findServiceByType("Access")
-            const metadataService: Service = ddo.findServiceByType("Metadata")
-
-            const price = metadataService.metadata.base.price
-            const balance = await consumer.getOceanBalance()
-            if (balance < price) {
-                throw new Error(`Not enough ocean tokens! Should have ${price} but has ${balance}`)
-            }
-
-            const event: ContractEvent = EventListener.subscribe(
-                accessService.serviceAgreementContract.contractName,
-                accessService.serviceAgreementContract.events[0].name, {
-                    serviceAgreementId: `0x${serviceAgreementId}`,
-                })
-
-            event.listenOnce(async (data) => {
-                const sa: ServiceAgreement = new ServiceAgreement(data.returnValues.serviceAgreementId)
-                await sa.payAsset(
-                    d.getId(),
-                    metadataService.metadata.base.price,
-                    consumer,
-                )
-                Logger.log("Completed asset payment, now access should be granted.")
-            })
-
-            return {
-                serviceAgreementId,
-                serviceAgreementSignature,
-            }
-        } catch (err) {
-            Logger.error("Signing ServiceAgreement failed!", err)
-        }
+        return await this.assets.order(did, serviceDefinitionId, consumer)
     }
 
     /**
@@ -330,6 +212,7 @@ export default class Ocean {
 
     /**
      * Executes a service agreement.
+     * @deprecated Replace by [Ocean.agreements.create]{@link #OceanAgreements.create}
      * @param  {string} did Decentralized ID.
      * @param  {string} serviceDefinitionId Service definition ID.
      * @param  {string} serviceAgreementId Service agreement ID.
@@ -338,6 +221,7 @@ export default class Ocean {
      * @param  {Account} publisher Publisher account.
      * @return {Promise<ServiceAgreement>}
      */
+    @deprecated("OceanAgreements.create")
     public async executeServiceAgreement(
         did: string,
         serviceDefinitionId: string,
@@ -346,47 +230,35 @@ export default class Ocean {
         consumer: Account,
         publisher: Account,
     ): Promise<ServiceAgreement> {
-        const d: DID = DID.parse(did)
-        const ddo = await AquariusProvider.getAquarius().retrieveDDO(d)
-
-        const serviceAgreement: ServiceAgreement = await ServiceAgreement
-            .executeServiceAgreement(
-                d,
-                ddo,
+        return await this.agreements
+            .create(did,
                 serviceDefinitionId,
                 serviceAgreementId,
                 serviceAgreementSignature,
                 consumer,
-                publisher)
-
-        return serviceAgreement
+                publisher,
+            )
     }
 
     /**
      * Search over the assets using a query.
+     * @deprecated Replace by [Ocean.assets.query]{@link #OceanAssets.query}
      * @param  {SearchQuery} query Query to filter the assets.
      * @return {Promise<DDO[]>}
      */
+    @deprecated("OceanAssets.query")
     public async searchAssets(query: SearchQuery): Promise<DDO[]> {
-        return AquariusProvider.getAquarius().queryMetadata(query)
+        return await this.assets.query(query)
     }
 
     /**
      * Search over the assets using a keyword.
-     * @param  {SearchQuery} text Text to filter the assets.
+     * @deprecated Replace by [Ocean.assets.search]{@link #OceanAssets.search}
+     * @param  {string} text Text to filter the assets.
      * @return {Promise<DDO[]>}
      */
+    @deprecated("OceanAssets.search")
     public async searchAssetsByText(text: string): Promise<DDO[]> {
-        return AquariusProvider.getAquarius().queryMetadataByText({
-            text,
-            page: 0,
-            offset: 100,
-            query: {
-                value: 1,
-            },
-            sort: {
-                value: 1,
-            },
-        } as SearchQuery)
+        return await this.assets.search(text)
     }
 }

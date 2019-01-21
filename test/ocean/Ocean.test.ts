@@ -151,7 +151,7 @@ describe("Ocean", () => {
 
     describe("#executeServiceAgreement()", () => {
 
-        it("should execute an service agreement", async () => {
+        it("should execute a service agreement", async () => {
 
             const publisher = accounts[0]
             const consumer = accounts[1]
