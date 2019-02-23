@@ -60,7 +60,7 @@
     "@oceanprotocol/keeper-contracts": "^0.6.12",
     "@oceanprotocol/secret-store-client": "~0.0.14",
     "@types/node-fetch": "^2.1.4",
-    "bignumber.js": "^8.0.1",
+    "bignumber.js": "^8.1.0",
     "deprecated-decorator": "^0.1.6",
     "ethereumjs-util": "^6.0.0",
     "node-fetch": "^2.3.0",
