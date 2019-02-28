@@ -115,7 +115,7 @@ export default class ServiceAgreement extends OceanBase {
         publisher: Account,
     ): Promise<ServiceAgreement> {
 
-        const {serviceAgreement} = await Keeper.getInstance()
+        const {serviceAgreement} = <any>await Keeper.getInstance()
 
         const service = ddo.findServiceById<"Access">(serviceDefinitionId)
 
@@ -228,7 +228,7 @@ export default class ServiceAgreement extends OceanBase {
     }
 
     public async payAsset(assetId: string, price: number, consumer: Account): Promise<boolean> {
-        const {paymentConditions, token} = await Keeper.getInstance()
+        const {paymentConditions, token} = <any>await Keeper.getInstance()
 
         await token.approve(paymentConditions.getAddress(), price, consumer.getId())
 
@@ -238,7 +238,7 @@ export default class ServiceAgreement extends OceanBase {
     }
 
     public async grantAccess(documentId: string, publisher: Account): Promise<boolean> {
-        const {accessConditions} = await Keeper.getInstance()
+        const {accessConditions} = <any>await Keeper.getInstance()
 
         const grantAccessReceipt =
             await accessConditions.grantAccess(this.getId(), documentId, publisher.getId())

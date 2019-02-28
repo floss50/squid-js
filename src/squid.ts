@@ -2,21 +2,21 @@ import Config from "./models/Config"
 import Account from "./ocean/Account"
 import DID from "./ocean/DID"
 import Ocean from "./ocean/Ocean"
-import ServiceAgreement from "./ocean/ServiceAgreements/ServiceAgreement"
-import ServiceAgreementTemplate from "./ocean/ServiceAgreements/ServiceAgreementTemplate"
-import Access from "./ocean/ServiceAgreements/Templates/Access"
-import FitchainCompute from "./ocean/ServiceAgreements/Templates/FitchainCompute"
-import SecretStoreProvider from "./secretstore/SecretStoreProvider"
 import Logger from "./utils/Logger"
 import WebServiceConnectorProvider from "./utils/WebServiceConnectorProvider"
-
+import Keeper from "./keeper/Keeper"
 import EventListener from "./keeper/EventListener"
+
+import * as templates from "./keeper/contracts/templates"
+import * as conditions from "./keeper/contracts/conditions"
 
 // Exports
 export * from "./ddo/DDO"
 export * from "./ddo/MetaData"
+export { generateId } from "./utils/GeneratorHelpers"
 
-const Templates = {Access, FitchainCompute}
+export { AgreementTemplate } from "./keeper/contracts/templates"
+export { Condition } from "./keeper/contracts/conditions"
 
 export {
     Ocean,
@@ -25,10 +25,10 @@ export {
     Config,
     DID,
     EventListener,
+    Keeper,
     Logger,
-    SecretStoreProvider,
-    ServiceAgreement,
-    ServiceAgreementTemplate,
-    Templates,
     WebServiceConnectorProvider,
+
+    conditions,
+    templates,
 }

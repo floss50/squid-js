@@ -3,6 +3,7 @@ import Contract from "web3-eth-contract"
 import {Receipt} from "web3-utils"
 import Logger from "../../utils/Logger"
 import ContractHandler from "../ContractHandler"
+import Web3Provider from "../Web3Provider"
 
 export default abstract class ContractBase {
 
@@ -22,7 +23,7 @@ export default abstract class ContractBase {
         return this.contract.getPastEvents(eventName, options)
     }
 
-    public getAddress() {
+    public getAddress(): string {
         return this.contract.options.address
     }
 
@@ -38,6 +39,13 @@ export default abstract class ContractBase {
 
     protected async init() {
         this.contract = await ContractHandler.get(this.contractName)
+    }
+
+    protected async sendFrom(name: string, args: any[], from?: string): Promise<Receipt> {
+        if (!from) {
+            from = (await Web3Provider.getWeb3().eth.getAccounts())[0]
+        }
+        return this.send(name, from, args)
     }
 
     protected async send(name: string, from: string, args: any[]): Promise<Receipt> {
@@ -73,7 +81,7 @@ export default abstract class ContractBase {
         }
     }
 
-    protected async call(name: string, args: any[], from?: string): Promise<any> {
+    protected async call<T extends any>(name: string, args: any[], from?: string): Promise<T> {
         if (!this.contract.methods[name]) {
             throw new Error(`Method ${name} is not part of contract ${this.contractName}`)
         }

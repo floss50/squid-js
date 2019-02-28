@@ -39,7 +39,7 @@ export default class ServiceAgreementTemplate extends OceanBase {
             .map((method: Method, i: number) => method.isTerminalCondition ? i : null)
             .filter((index: number) => index !== null)
 
-        const {serviceAgreement} = await Keeper.getInstance()
+        const {serviceAgreement} = <any>await Keeper.getInstance()
 
         const owner = await this.getOwner()
 
@@ -91,12 +91,12 @@ export default class ServiceAgreementTemplate extends OceanBase {
      * gets the status of a service agreement template
      */
     public async getStatus(): Promise<boolean> {
-        const {serviceAgreement} = await Keeper.getInstance()
+        const {serviceAgreement} = <any>await Keeper.getInstance()
         return serviceAgreement.getTemplateStatus(this.getId())
     }
 
     public async getOwner(): Promise<Account> {
-        const {serviceAgreement} = await Keeper.getInstance()
+        const {serviceAgreement} = <any>await Keeper.getInstance()
 
         return new Account(await serviceAgreement.getTemplateOwner(this.id))
     }

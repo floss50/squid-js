@@ -19,8 +19,6 @@ export default class DIDRegistry extends ContractBase {
     }
 
     public async getUpdateAt(did: string): Promise<number> {
-        const blockNum = await this.call("getUpdateAt", ["0x" + did])
-
-        return parseInt(blockNum, 10)
+        return +await this.call("getUpdateAt", ["0x" + did])
     }
 }

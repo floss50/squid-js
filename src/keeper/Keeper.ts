@@ -1,9 +1,9 @@
-import AccessConditions from "./contracts/conditions/AccessConditions"
-import PaymentConditions from "./contracts/conditions/PaymentConditions"
 import DIDRegistry from "./contracts/DIDRegistry"
 import Dispenser from "./contracts/Dispenser"
-import ServiceExecutionAgreement from "./contracts/ServiceExecutionAgreement"
 import OceanToken from "./contracts/Token"
+import { Condition, LockRewardCondition, EscrowReward, AccessSecretStoreCondition } from "./contracts/conditions"
+import { EscrowAccessSecretStoreTemplate } from "./contracts/templates"
+import { TemplateStoreManager } from "./contracts/managers"
 
 import Web3Provider from "./Web3Provider"
 
@@ -21,17 +21,30 @@ export default class Keeper {
      * @return {Promise<Keeper>}
      */
     public static async getInstance(): Promise<Keeper> {
-
         if (Keeper.instance === null) {
             Keeper.instance = new Keeper()
 
+            // Main contracts
             Keeper.instance.dispenser = await Dispenser.getInstance()
             Keeper.instance.token = await OceanToken.getInstance()
-            Keeper.instance.serviceAgreement = await ServiceExecutionAgreement.getInstance()
-            Keeper.instance.accessConditions = await AccessConditions.getInstance()
-            Keeper.instance.paymentConditions = await PaymentConditions.getInstance()
             Keeper.instance.didRegistry = await DIDRegistry.getInstance()
+
+            // Managers
+            Keeper.instance.templateStoreManager = await TemplateStoreManager.getInstance()
+
+            // Conditions
+            Keeper.instance.conditions = {
+                lockRewardCondition: await LockRewardCondition.getInstance(),
+                escrowReward: await EscrowReward.getInstance(),
+                accessSecretStoreCondition: await AccessSecretStoreCondition.getInstance(),
+            }
+
+            // Conditions
+            Keeper.instance.templates = {
+                escrowAccessSecretStoreTemplate: await EscrowAccessSecretStoreTemplate.getInstance(),
+            }
         }
+
         return Keeper.instance
     }
 
@@ -54,28 +67,42 @@ export default class Keeper {
     public dispenser: Dispenser
 
     /**
-     * Service agreement smart contract instance.
-     * @type {ServiceExecutionAgreement}
-     */
-    public serviceAgreement: ServiceExecutionAgreement
-
-    /**
-     * Access conditions smart contract instance.
-     * @type {AccessConditions}
-     */
-    public accessConditions: AccessConditions
-
-    /**
-     * Payment conditions smart contract instance.
-     * @type {PaymentConditions}
-     */
-    public paymentConditions: PaymentConditions
-
-    /**
      * DID registry smart contract instance.
      * @type {DIDRegistry}
      */
     public didRegistry: DIDRegistry
+
+    /**
+     * Template store manager smart contract instance.
+     * @type {TemplateStoreManager}
+     */
+    public templateStoreManager: TemplateStoreManager
+
+    /**
+     * Conditions instances.
+     */
+    public conditions: {
+        lockRewardCondition: LockRewardCondition,
+        escrowReward: EscrowReward,
+        accessSecretStoreCondition: AccessSecretStoreCondition,
+    }
+
+    /**
+     * Templates instances.
+     */
+    public templates: {
+        escrowAccessSecretStoreTemplate: EscrowAccessSecretStoreTemplate,
+    }
+
+    /**
+     * Returns a condition by address.
+     * @param  {string}    address Address of deployed condition.
+     * @return {Condition}         Condition instance.
+     */
+    public getConditionByAddress(address: string): Condition {
+        return Object.values(this.conditions)
+            .find(condition => condition.getAddress() === address)
+    }
 
     /**
      * Returns the network by name.
