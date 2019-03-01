@@ -2,7 +2,7 @@ import { assert } from 'chai'
 
 import { config } from "../config"
 
-import { Ocean, templates, conditions, generateId, Keeper } from '../../src' // @oceanprotocol/squid
+import { Ocean, templates, conditions, generateId, Keeper, Account } from '../../src' // @oceanprotocol/squid
 
 const { LockRewardCondition, EscrowReward, AccessSecretStoreCondition } = conditions
 const { EscrowAccessSecretStoreTemplate } = templates
@@ -13,13 +13,13 @@ describe("Register Escrow Access Secret Store Template", () => {
 
     const agreementId = `0x${generateId()}`
     const escrowAmount = 12
-    const did = `0x${"a".repeat(64)}`
+    const did = `0x${generateId()}`
     const url = 'https://example.com/did/ocean/test-attr-example.txt'
     const checksum = "b".repeat(32)
 
-    let templateManagerOwner: string
-    let sender: string
-    let receiver: string
+    let templateManagerOwner: Account
+    let publisher: Account
+    let consumer: Account
 
     let accessSecretStoreCondition: conditions.AccessSecretStoreCondition
     let lockRewardCondition: conditions.LockRewardCondition
@@ -38,9 +38,9 @@ describe("Register Escrow Access Secret Store Template", () => {
         template = await EscrowAccessSecretStoreTemplate.getInstance()
 
         // Accounts
-        templateManagerOwner = (await ocean.accounts.list())[0].getId()
-        sender = (await ocean.accounts.list())[1].getId()
-        receiver = (await ocean.accounts.list())[2].getId()
+        templateManagerOwner = (await ocean.accounts.list())[0]
+        publisher = (await ocean.accounts.list())[1]
+        consumer = (await ocean.accounts.list())[2]
 
         // Conditions
         accessSecretStoreCondition = await AccessSecretStoreCondition.getInstance()
@@ -49,21 +49,32 @@ describe("Register Escrow Access Secret Store Template", () => {
     })
 
     it("should propose the template", async () => {
-        await keeper.templateStoreManager.proposeTemplate(template.getAddress(), receiver, true)
+        await keeper.templateStoreManager.proposeTemplate(template.getAddress(), consumer.getId(), true)
         // TODO: Use a event to detect template mined
         await new Promise(_ => setTimeout(_, 6 * 1000))
     })
 
     it("should approve the template", async () => {
-        await keeper.templateStoreManager.approveTemplate(template.getAddress(), templateManagerOwner, true)
+        await keeper.templateStoreManager.approveTemplate(template.getAddress(), templateManagerOwner.getId(), true)
         // TODO: Use a event to detect template mined
         await new Promise(_ => setTimeout(_, 6 * 1000))
     })
 
+    it("should register a DID", async () => {
+        await keeper.didRegistry.registerAttribute(did.replace("0x", ""), checksum, url, publisher.getId())
+    })
+
     it("should generate the condition IDs", async () => {
-        conditionIdAccess = await accessSecretStoreCondition.generateId(agreementId, await accessSecretStoreCondition.hashValues(did, receiver))
+        conditionIdAccess = await accessSecretStoreCondition.generateIdHash(agreementId, did, consumer.getId())
         conditionIdLock = await lockRewardCondition.generateIdHash(agreementId, await escrowReward.getAddress(), escrowAmount)
-        conditionIdEscrow = await escrowReward.generateId(agreementId, await escrowReward.hashValues(escrowAmount, receiver, sender, conditionIdLock, conditionIdAccess))
+        conditionIdEscrow = await escrowReward.generateIdHash(
+            agreementId,
+            escrowAmount,
+            consumer.getId(),
+            publisher.getId(),
+            conditionIdLock,
+            conditionIdAccess,
+        )
     })
 
     it("should have conditions types", async () => {
@@ -93,17 +104,51 @@ describe("Register Escrow Access Secret Store Template", () => {
     })
 
     it("should create a new agreement", async () => {
-        await keeper.didRegistry.registerAttribute(did.replace("0x", ""), checksum, url, sender)
-
         const agreement = await template.createAgreement(
             agreementId,
             did,
             [conditionIdAccess, conditionIdLock, conditionIdEscrow],
             [0, 0, 0],
             [0, 0, 0],
-            receiver,
+            consumer.getId(),
         )
 
         assert.isTrue(agreement.status)
+    })
+
+    it("should fulfill LockRewardCondition", async () => {
+        await consumer.requestTokens(escrowAmount)
+
+        await keeper.token.approve(lockRewardCondition.getAddress(), escrowAmount, consumer.getId())
+
+        const fulfill = await lockRewardCondition.fulfill(agreementId, escrowReward.getAddress(), escrowAmount, consumer.getId())
+
+        assert.isDefined(fulfill.events.Fulfilled, "Not Fulfilled event.")
+    })
+
+    it("should fulfill AccessSecretStoreCondition", async () => {
+        const fulfill = await accessSecretStoreCondition.fulfill(agreementId, did, consumer.getId(), publisher.getId())
+
+        assert.isDefined(fulfill.events.Fulfilled, "Not Fulfilled event.")
+    })
+
+    it("should fulfill EscrowReward", async () => {
+        const fulfill = await escrowReward.fulfill(
+            agreementId,
+            escrowAmount,
+            consumer.getId(),
+            publisher.getId(),
+            conditionIdLock,
+            conditionIdAccess,
+            consumer.getId(),
+        )
+
+        assert.isDefined(fulfill.events.Fulfilled, "Not Fulfilled event.")
+    })
+
+    it("should grant the access to the consumer", async () => {
+        const accessGranted = await accessSecretStoreCondition.checkPermissions(consumer.getId(), did)
+
+        assert.isTrue(accessGranted, "Consumer has not been granted.")
     })
 })
