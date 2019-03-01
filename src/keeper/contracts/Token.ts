@@ -1,5 +1,4 @@
 import BigNumber from "bignumber.js"
-import {Receipt} from "web3-utils"
 import ContractBase from "./ContractBase"
 
 export default class OceanToken extends ContractBase {
@@ -10,8 +9,8 @@ export default class OceanToken extends ContractBase {
         return token
     }
 
-    public async approve(marketAddress: string, price: number, buyerAddress: string): Promise<Receipt> {
-        return this.send("approve", buyerAddress, [marketAddress, price])
+    public async approve(to: string, price: number, from?: string) {
+        return this.sendFrom("approve", [to, price], from)
     }
 
     public async balanceOf(address: string): Promise<number> {
@@ -19,7 +18,7 @@ export default class OceanToken extends ContractBase {
             .then((balance: string) => new BigNumber(balance).toNumber())
     }
 
-    public async transfer(to: string, amount: number, from: string): Promise<boolean> {
+    public async transfer(to: string, amount: number, from: string) {
         return this.send("transfer", from, [to, amount])
     }
 }

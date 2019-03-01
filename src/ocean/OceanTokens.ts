@@ -32,9 +32,10 @@ export default class OceanTokens {
      * @return {Promise<boolean>}        Success,
      */
     public async transfer(to: string, amount: number, from: Account): Promise<boolean> {
-        return (await Keeper.getInstance())
+        (await Keeper.getInstance())
             .token
             .transfer(to, amount, from.getId())
+        return true
     }
 
     /**

@@ -1,4 +1,3 @@
-import {Receipt} from "web3-utils"
 import Web3Provider from "../Web3Provider"
 import ContractBase from "./ContractBase"
 
@@ -10,7 +9,7 @@ export default class DIDRegistry extends ContractBase {
         return didRegistry
     }
 
-    public async registerAttribute(did: string, checksum: string, value: string, ownerAddress: string): Promise<Receipt> {
+    public async registerAttribute(did: string, checksum: string, value: string, ownerAddress: string) {
         return this.send("registerAttribute", ownerAddress, ["0x" + did, Web3Provider.getWeb3().utils.fromAscii(checksum), value])
     }
 

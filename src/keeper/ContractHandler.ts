@@ -1,11 +1,11 @@
-import Contract from "web3-eth-contract"
+import { Contract } from "web3-eth-contract"
 import Logger from "../utils/Logger"
 import Keeper from "./Keeper"
 import Web3Provider from "./Web3Provider"
 
 export default class ContractHandler {
 
-    public static async get(what: string): Contract {
+    public static async get(what: string): Promise<Contract> {
         const where = (await (await Keeper.getInstance()).getNetworkName()).toLowerCase()
         try {
             return ContractHandler.contracts.get(what) || await ContractHandler.load(what, where)

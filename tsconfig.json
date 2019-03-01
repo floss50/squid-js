@@ -3,6 +3,7 @@
     "resolveJsonModule": true,
     "moduleResolution": "node",
     "lib": [
+      "es2017",
       "es6",
       "es7"
     ],

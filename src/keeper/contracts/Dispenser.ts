@@ -1,4 +1,3 @@
-import {Receipt} from "web3-utils"
 import ContractBase from "./ContractBase"
 
 export default class Dispenser extends ContractBase {
@@ -9,7 +8,7 @@ export default class Dispenser extends ContractBase {
         return market
     }
 
-    public async requestTokens(amount: number, receiverAddress: string): Promise<Receipt> {
+    public async requestTokens(amount: number, receiverAddress: string) {
         return this.send("requestTokens", receiverAddress, [amount])
     }
 }

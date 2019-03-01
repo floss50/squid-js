@@ -1,4 +1,3 @@
-import ConfigProvider from "../../ConfigProvider"
 import { Condition as DDOCondition, Dependency, Parameter } from "../../ddo/Condition"
 import { MetaData } from "../../ddo/MetaData"
 import ContractReflector from "../../keeper/ContractReflector"
@@ -21,7 +20,7 @@ export default class ServiceAgreementTemplate extends OceanBase {
             {type: "address", value: methodReflection.address} as ValuePair,
             {type: "bytes4", value: methodReflection.signature} as ValuePair,
         ]
-        return Web3Provider.getWeb3().utils.soliditySha3(...values).toString("hex")
+        return (Web3Provider as any).getWeb3().utils.soliditySha3(...values).toString("hex")
     }
 
     public constructor(private template: TemplateBase) {

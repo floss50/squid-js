@@ -10,8 +10,8 @@ if (process.env.SEED_WORDS) {
         seedphrase,
         configJson.nodeUri,
         0,
-        2,
+        5,
     )
 }
 
-export const config = configJson as Config
+export const config: Config = configJson as any

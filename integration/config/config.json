@@ -7,5 +7,5 @@
   "threshold": 0,
   "password": "secret",
   "address": "0xa99d43d86a0758d5632313b8fa3972b6088a21bb",
-  "verbose": false
+  "verbose": "error"
 }

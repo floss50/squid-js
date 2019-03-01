@@ -1,4 +1,3 @@
-import ConfigProvider from "../../ConfigProvider"
 import { Condition } from "../../ddo/Condition"
 import { DDO } from "../../ddo/DDO"
 import { ServiceAccess } from "../../ddo/Service"
@@ -93,7 +92,7 @@ export default class ServiceAgreement extends OceanBase {
 
         let serviceAgreementHashSignature: string
         const web3 = Web3Provider.getWeb3()
-        if (web3.currentProvider.isMetaMask) {
+        if ((web3 as any).currentProvider.isMetaMask) {
             // password is injected by metamask, dont try to set it!
             serviceAgreementHashSignature = await web3.eth.personal.sign(serviceAgreementHash, consumer.getId(), null)
         } else {
@@ -163,7 +162,7 @@ export default class ServiceAgreement extends OceanBase {
     private static hashValuePairArray(valuePairs: ValuePair[]): string {
         let hash: string
         try {
-            hash = Web3Provider.getWeb3().utils.soliditySha3(...valuePairs).toString("hex")
+            hash = (Web3Provider as any).getWeb3().utils.soliditySha3(...valuePairs).toString("hex")
         } catch (err) {
             Logger.error(`Hashing of ${JSON.stringify(valuePairs, null, 2)} failed.`)
             throw err
@@ -192,7 +191,7 @@ export default class ServiceAgreement extends OceanBase {
             {type: "bytes32", value: "0x" + serviceAgreementId} as ValuePair,
         ]
 
-        return Web3Provider.getWeb3().utils.soliditySha3(...args).toString("hex")
+        return (Web3Provider as any).getWeb3().utils.soliditySha3(...args).toString("hex")
     }
 
     private static getTimeoutValuesFromService(service: ServiceAccess): number[] {

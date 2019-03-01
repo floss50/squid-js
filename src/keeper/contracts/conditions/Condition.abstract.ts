@@ -24,20 +24,20 @@ export abstract class Condition extends ContractBase {
         return this.call("hashValues", args)
     }
 
-    fulfill(agreementId: string, ...args: any[]): Promise<ConditionState>
-    fulfill(agreementId: string, args: any[], from?: string): Promise<ConditionState> {
-        return this.sendFrom("fulfill", args, from)
+    fulfill(agreementId: string, ...args: any[])
+    fulfill(agreementId: string, args: any[], from?: string) {
+        return this.sendFrom("fulfill", [agreementId, ...args], from)
     }
 
-    async generateIdHash(agreementId: string, ...values: any[]): Promise<string> {
+    async generateIdHash(agreementId: string, ...values: any[]) {
         return this.generateId(agreementId, await this.hashValues(...values))
     }
 
-    generateId(agreementId: string, valueHash: string): Promise<string> {
-        return this.call("generateId", [agreementId, valueHash])
+    generateId(agreementId: string, valueHash: string) {
+        return this.call<string>("generateId", [agreementId, valueHash])
     }
 
-    abortByTimeOut(agreementId: string, from?: string): Promise<ConditionState> {
+    abortByTimeOut(agreementId: string, from?: string) {
         return this.sendFrom("requestTokens", [agreementId], from)
     }
 }
