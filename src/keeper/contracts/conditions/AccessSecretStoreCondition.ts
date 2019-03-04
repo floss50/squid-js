@@ -3,7 +3,7 @@ import { Condition } from "./Condition.abstract"
 export class AccessSecretStoreCondition extends Condition {
 
     public static async getInstance(): Promise<AccessSecretStoreCondition> {
-        return Condition.getInstance("AccessSecretStoreCondition", AccessSecretStoreCondition) as any
+        return Condition.getInstance("AccessSecretStoreCondition", AccessSecretStoreCondition)
     }
 
     hashValues(did: string, grantee: string) {

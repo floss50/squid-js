@@ -8,7 +8,7 @@ export abstract class AgreementTemplate extends ContractBase {
         super(contractName)
     }
 
-    public static async getInstance(conditionName: string, templateClass: any): Promise<AgreementTemplate> {
+    public static async getInstance(conditionName: string, templateClass: any): Promise<AgreementTemplate & any> {
         const condition: AgreementTemplate = new (templateClass as any)(conditionName)
         await condition.init()
         return condition

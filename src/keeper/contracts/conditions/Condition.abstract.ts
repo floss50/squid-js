@@ -13,7 +13,7 @@ export abstract class Condition extends ContractBase {
         super(contractName)
     }
 
-    public static async getInstance(conditionName: string, conditionsClass: any): Promise<Condition> {
+    public static async getInstance(conditionName: string, conditionsClass: any): Promise<Condition & any> {
         const condition: Condition = new (conditionsClass as any)(conditionName)
         await condition.init()
         return condition

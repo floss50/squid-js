@@ -40,10 +40,15 @@ export default abstract class ContractBase {
         this.contract = await ContractHandler.get(this.contractName)
     }
 
-    protected async sendFrom(name: string, args: any[], from?: string): Promise<TransactionReceipt> {
+    protected async getFromAddress(from?: string): Promise<string> {
         if (!from) {
             from = (await Web3Provider.getWeb3().eth.getAccounts())[0]
         }
+        return from
+    }
+
+    protected async sendFrom(name: string, args: any[], from?: string): Promise<TransactionReceipt> {
+        from = await this.getFromAddress(from)
         return this.send(name, from, args)
     }
 

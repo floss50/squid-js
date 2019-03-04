@@ -21,6 +21,7 @@ import Account from "./Account"
 import DID from "./DID"
 import ServiceAgreement from "./ServiceAgreements/ServiceAgreement"
 
+import Keeper from "../keeper/Keeper"
 import EventListener from "../keeper/EventListener"
 
 /**
@@ -44,6 +45,7 @@ export default class Ocean {
 
         if (!Ocean.instance) {
             Ocean.instance = new Ocean()
+            Ocean.instance.keeper = await Keeper.getInstance()
             Ocean.instance.accounts = await OceanAccounts.getInstance()
             Ocean.instance.assets = await OceanAssets.getInstance()
             Ocean.instance.agreements = await OceanAgreements.getInstance()
@@ -59,6 +61,12 @@ export default class Ocean {
      * @type {Ocean}
      */
     private static instance: Ocean = null
+
+    /**
+     * Keeper instance.
+     * @type {Keeper}
+     */
+    public keeper: Keeper
 
     /**
      * Ocean account submodule

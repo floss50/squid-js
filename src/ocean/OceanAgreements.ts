@@ -5,6 +5,8 @@ import Account from "./Account"
 import DID from "./DID"
 import ServiceAgreement from "./ServiceAgreements/ServiceAgreement"
 
+import OceanAgreementsConditions from "./OceanAgreementsConditions"
+
 export interface AgreementPreparionResult {
     agreementId: string
     signature: string
@@ -22,6 +24,7 @@ export default class OceanAgreements {
     public static async getInstance(): Promise<OceanAgreements> {
         if (!OceanAgreements.instance) {
             OceanAgreements.instance = new OceanAgreements()
+            OceanAgreements.instance.conditions = await OceanAgreementsConditions.getInstance()
         }
 
         return OceanAgreements.instance
@@ -32,6 +35,12 @@ export default class OceanAgreements {
      * @type {OceanAgreements}
      */
     private static instance: OceanAgreements = null
+
+    /**
+     * Agreements Conditions submodule.
+     * @type {OceanAgreementsConditions}
+     */
+    public conditions: OceanAgreementsConditions
 
     /**
      * Creates a consumer signature for the specified asset service.

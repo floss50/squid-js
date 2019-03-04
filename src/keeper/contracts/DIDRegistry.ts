@@ -13,11 +13,11 @@ export default class DIDRegistry extends ContractBase {
         return this.send("registerAttribute", ownerAddress, ["0x" + did, Web3Provider.getWeb3().utils.fromAscii(checksum), value])
     }
 
-    public async getOwner(did: string): Promise<string> {
-        return this.call("getOwner", ["0x" + did])
+    public async getDIDOwner(did: string): Promise<string> {
+        return this.call("getDIDOwner", [did])
     }
 
-    public async getUpdateAt(did: string): Promise<number> {
-        return +await this.call("getUpdateAt", ["0x" + did])
+    public async getBlockNumberUpdated(did: string): Promise<number> {
+        return +await this.call("getBlockNumberUpdated", [did])
     }
 }
