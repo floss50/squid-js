@@ -6,7 +6,7 @@ export enum LogLevel {
     Verbose = 3,
 }
 
-export default class Logger {
+export class Logger {
 
     public static setLevel(level: LogLevel) {
         this.logLevel = level
@@ -35,3 +35,5 @@ export default class Logger {
         }
     }
 }
+
+export default Logger
