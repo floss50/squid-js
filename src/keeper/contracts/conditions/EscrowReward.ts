@@ -1,4 +1,5 @@
 import { Condition } from "./Condition.abstract"
+import { zeroX } from "../../../utils"
 
 export class EscrowReward extends Condition {
 
@@ -7,7 +8,7 @@ export class EscrowReward extends Condition {
     }
 
     hashValues(amount: number, receiver: string, sender: string, lockCondition: string, releaseCondition: string) {
-        return super.hashValues(amount, receiver, sender, lockCondition, releaseCondition)
+        return super.hashValues(amount, ...[receiver, sender, lockCondition, releaseCondition].map(zeroX))
     }
 
     fulfill(
@@ -19,6 +20,6 @@ export class EscrowReward extends Condition {
         releaseCondition: string,
         from?: string,
     ) {
-        return super.fulfill(agreementId, [amount, receiver, sender, lockCondition, releaseCondition], from)
+        return super.fulfill(agreementId, [amount, ...[receiver, sender, lockCondition, releaseCondition].map(zeroX)], from)
     }
 }

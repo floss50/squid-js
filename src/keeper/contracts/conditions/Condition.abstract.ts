@@ -1,4 +1,5 @@
 import ContractBase from "../ContractBase"
+import { zeroX } from "../../../utils"
 
 export enum ConditionState {
     Uninitialized = 0,
@@ -26,7 +27,7 @@ export abstract class Condition extends ContractBase {
 
     fulfill(agreementId: string, ...args: any[])
     fulfill(agreementId: string, args: any[], from?: string) {
-        return this.sendFrom("fulfill", [agreementId, ...args], from)
+        return this.sendFrom("fulfill", [zeroX(agreementId), ...args], from)
     }
 
     async generateIdHash(agreementId: string, ...values: any[]) {
@@ -34,10 +35,10 @@ export abstract class Condition extends ContractBase {
     }
 
     generateId(agreementId: string, valueHash: string) {
-        return this.call<string>("generateId", [agreementId, valueHash])
+        return this.call<string>("generateId", [zeroX(agreementId), valueHash])
     }
 
     abortByTimeOut(agreementId: string, from?: string) {
-        return this.sendFrom("requestTokens", [agreementId], from)
+        return this.sendFrom("requestTokens", [zeroX(agreementId)], from)
     }
 }

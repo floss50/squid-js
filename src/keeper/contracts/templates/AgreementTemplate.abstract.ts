@@ -1,6 +1,7 @@
 import ContractBase from "../ContractBase"
 import { Condition } from "../conditions/Condition.abstract"
 import Keeper from "../../Keeper"
+import { zeroX } from "../../../utils"
 
 export abstract class AgreementTemplate extends ContractBase {
 
@@ -28,9 +29,9 @@ export abstract class AgreementTemplate extends ContractBase {
         return this.sendFrom(
             "createAgreement",
             [
-                agreementId,
-                did,
-                conditionIds,
+                zeroX(agreementId),
+                zeroX(did),
+                conditionIds.map(zeroX),
                 timeLocks,
                 timeOuts,
                 ...extraArgs,

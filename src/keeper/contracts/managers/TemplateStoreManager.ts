@@ -1,5 +1,6 @@
 import Logger from "../../../utils/Logger"
 import ContractBase from "../ContractBase"
+import { zeroX } from "../../../utils"
 
 export enum TemplateState {
     Uninitialized = 0,
@@ -35,7 +36,7 @@ export class TemplateStoreManager extends ContractBase {
                 throw new Error("Template already exist.")
             }
         } else {
-            return this.sendFrom("proposeTemplate", [address], from)
+            return this.sendFrom("proposeTemplate", [zeroX(address)], from)
         }
     }
 
@@ -47,16 +48,16 @@ export class TemplateStoreManager extends ContractBase {
                 throw new Error(`Template not in "proposed" state.`)
             }
         } else {
-            return this.sendFrom("approveTemplate", [address], from)
+            return this.sendFrom("approveTemplate", [zeroX(address)], from)
         }
     }
 
     public revokeTemplate(address: string, from?: string) {
-        return this.sendFrom("revokeTemplate", [address], from)
+        return this.sendFrom("revokeTemplate", [zeroX(address)], from)
     }
 
     public async getTemplate(address: string) {
-        const {state, owner, lastUpdatedBy, blockNumberUpdated} = await this.call("getTemplate", [address])
+        const {state, owner, lastUpdatedBy, blockNumberUpdated} = await this.call("getTemplate", [zeroX(address)])
         return {state: +state, owner, lastUpdatedBy, blockNumberUpdated: +blockNumberUpdated} as TemplateMetadata
     }
 }

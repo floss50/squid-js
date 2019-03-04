@@ -65,7 +65,7 @@ describe("Register Escrow Access Secret Store Template", () => {
         let conditionIdEscrow: string
 
         it("should register a DID", async () => {
-            await keeper.didRegistry.registerAttribute(did.replace("0x", ""), checksum, url, publisher.getId())
+            await keeper.didRegistry.registerAttribute(did, checksum, url, publisher.getId())
         })
 
         it("should generate the condition IDs", async () => {

@@ -1,4 +1,5 @@
 import { Condition } from "./Condition.abstract"
+import { zeroX } from "../../../utils"
 
 export class LockRewardCondition extends Condition {
 
@@ -7,10 +8,10 @@ export class LockRewardCondition extends Condition {
     }
 
     hashValues(rewardAddress: string, amount: number) {
-        return super.hashValues(rewardAddress, amount)
+        return super.hashValues(zeroX(rewardAddress), amount)
     }
 
     fulfill(agreementId: string, rewardAddress: string, amount: number, from?: string) {
-        return super.fulfill(agreementId, [rewardAddress, amount], from)
+        return super.fulfill(agreementId, [zeroX(rewardAddress), amount], from)
     }
 }

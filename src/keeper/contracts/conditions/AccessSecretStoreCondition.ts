@@ -1,4 +1,5 @@
 import { Condition } from "./Condition.abstract"
+import { zeroX } from "../../../utils"
 
 export class AccessSecretStoreCondition extends Condition {
 
@@ -7,14 +8,14 @@ export class AccessSecretStoreCondition extends Condition {
     }
 
     hashValues(did: string, grantee: string) {
-        return super.hashValues(did, grantee)
+        return super.hashValues(did, zeroX(grantee))
     }
 
     fulfill(agreementId: string, did: string, grantee: string, from?: string) {
-        return super.fulfill(agreementId, [did, grantee], from)
+        return super.fulfill(agreementId, [did, grantee].map(zeroX), from)
     }
 
     checkPermissions(grantee: string, did: string, from?: string) {
-        return this.call<boolean>("checkPermissions", [grantee, did], from)
+        return this.call<boolean>("checkPermissions", [grantee, did].map(zeroX), from)
     }
 }
