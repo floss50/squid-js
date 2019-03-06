@@ -1,9 +1,6 @@
 import Contract from "web3-eth-contract"
 import ContractHandler from "../../src/keeper/ContractHandler"
 import Web3Provider from "../../src/keeper/Web3Provider"
-import ServiceAgreementTemplate from "../../src/ocean/ServiceAgreements/ServiceAgreementTemplate"
-import Access from "../../src/ocean/ServiceAgreements/Templates/Access"
-import FitchainCompute from "../../src/ocean/ServiceAgreements/Templates/FitchainCompute"
 import Logger from "../../src/utils/Logger"
 
 export default class TestContractHandler extends ContractHandler {
@@ -15,17 +12,16 @@ export default class TestContractHandler extends ContractHandler {
 
         // deploy contracts
         await TestContractHandler.deployContracts(deployerAddress)
-
-        // register templates
-        Logger.log(`Registering Access Template from ${deployerAddress}`)
-        await new ServiceAgreementTemplate(new Access()).register(deployerAddress)
-        Logger.log(`Registering FitchainCompute Template from ${deployerAddress}`)
-        await new ServiceAgreementTemplate(new FitchainCompute()).register(deployerAddress)
     }
 
     private static async deployContracts(deployerAddress: string) {
         Logger.log("Trying to deploy contracts")
 
+        // Libraries
+        const epochLibrary = await TestContractHandler.deployContract("EpochLibrary", deployerAddress)
+        const didRegistryLibrary = await TestContractHandler.deployContract("DIDRegistryLibrary", deployerAddress)
+
+        // Contracts
         const token = await TestContractHandler.deployContract("OceanToken", deployerAddress, [deployerAddress])
 
         const dispenser = await TestContractHandler.deployContract("Dispenser", deployerAddress, [token.options.address, deployerAddress])
@@ -34,16 +30,57 @@ export default class TestContractHandler extends ContractHandler {
         await token.methods.addMinter(dispenser.options.address)
             .send({from: deployerAddress})
 
-        const sa = await TestContractHandler.deployContract("ServiceExecutionAgreement", deployerAddress)
 
-        await TestContractHandler.deployContract("AccessConditions", deployerAddress, [sa.options.address])
+        console.log(didRegistryLibrary.options.address)
 
-        await TestContractHandler.deployContract("PaymentConditions", deployerAddress, [sa.options.address, token.options.address])
+        const didRegistry = await TestContractHandler.deployContract("DIDRegistry", deployerAddress, [deployerAddress], {
+            DIDRegistryLibrary: didRegistryLibrary.options.address,
+        })
 
-        await TestContractHandler.deployContract("DIDRegistry", deployerAddress, [deployerAddress])
+        // Managers
+        const templateStoreManager = await TestContractHandler.deployContract("TemplateStoreManager", deployerAddress, [
+            deployerAddress,
+        ])
+        const conditionStoreManager = await TestContractHandler.deployContract("ConditionStoreManager", deployerAddress, [
+            deployerAddress,
+        ], {
+            EpochLibrary: epochLibrary.options.address,
+        })
+        const agreementStoreManager = await TestContractHandler.deployContract("AgreementStoreManager", deployerAddress, [
+            deployerAddress, conditionStoreManager.options.address, templateStoreManager.options.address, didRegistry.options.address,
+        ])
+
+        // Conditions
+        const lockRewardCondition = await TestContractHandler.deployContract("LockRewardCondition", deployerAddress, [
+            deployerAddress, conditionStoreManager.options.address, token.options.address,
+        ])
+        const accessSecretStoreCondition = await TestContractHandler.deployContract("AccessSecretStoreCondition", deployerAddress, [
+            deployerAddress, conditionStoreManager.options.address, agreementStoreManager.options.address,
+        ])
+
+        // Conditions rewards
+        const escrowReward = await TestContractHandler.deployContract("EscrowReward", deployerAddress, [
+            deployerAddress, conditionStoreManager.options.address, token.options.address,
+        ])
+
+
+        // Templates
+        await TestContractHandler.deployContract("EscrowAccessSecretStoreTemplate", deployerAddress, [
+            deployerAddress,
+            agreementStoreManager.options.address,
+            didRegistry.options.address,
+            accessSecretStoreCondition.options.address,
+            lockRewardCondition.options.address,
+            escrowReward.options.address,
+        ])
     }
 
-    private static async deployContract(name: string, from: string, args: any[] = []): Promise<Contract> {
+    private static async deployContract(
+        name: string,
+        from: string,
+        args: any[] = [],
+        tokens: {[name: string]: string} = {},
+    ): Promise<Contract> {
 
         // dont redeploy if there is already something loaded
         if (ContractHandler.has(name)) {
@@ -63,9 +100,19 @@ export default class TestContractHandler extends ContractHandler {
             const artifact = require(`@oceanprotocol/keeper-contracts/artifacts/${name}.development.json`)
             const tempContract = new web3.eth.Contract(artifact.abi, artifact.address)
             const isZos = !!tempContract.methods.initialize
+
+            Logger.debug({
+                name, from, isZos, args,
+                libraries: artifact.bytecode
+                    .replace(/(0x)?[a-f0-9]{8}/gi, "")
+                    .replace(/__([^_]+)_*[0-9a-f]{2}/g, "|$1")
+                    .split("|")
+                    .splice(1),
+            })
+
             contractInstance = await tempContract
                 .deploy({
-                    data: artifact.bytecode,
+                    data: TestContractHandler.replaceTokens(artifact.bytecode.toString(), tokens),
                     arguments: isZos ? undefined : args,
                 })
                 .send(sendConfig)
@@ -80,5 +127,13 @@ export default class TestContractHandler extends ContractHandler {
         }
 
         return contractInstance
+    }
+
+    private static replaceTokens(bytecode: string, tokens: {[name: string]: string}): string {
+        return Object.entries(tokens)
+            .reduce(
+                (acc, [token, address]) => acc.replace(new RegExp(`_+${token}_+`, "g"), address.substr(2)),
+                bytecode,
+            )
     }
 }
