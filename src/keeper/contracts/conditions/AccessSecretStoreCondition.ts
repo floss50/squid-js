@@ -8,7 +8,7 @@ export class AccessSecretStoreCondition extends Condition {
     }
 
     hashValues(did: string, grantee: string) {
-        return super.hashValues(did, zeroX(grantee))
+        return super.hashValues(zeroX(did), zeroX(grantee))
     }
 
     fulfill(agreementId: string, did: string, grantee: string, from?: string) {
