@@ -55,6 +55,7 @@ export default class Brizo {
                     decodeURI(JSON.stringify(args)),
                 )
         } catch (e) {
+            Logger.error(e)
             throw new Error("HTTP request failed")
         }
     }

@@ -3,10 +3,16 @@ import { LockRewardCondition, EscrowReward, AccessSecretStoreCondition } from '.
 import DIDRegistry from '../DIDRegistry'
 import { generateId } from '../../../utils/GeneratorHelpers'
 
+import { escrowAccessSecretStoreTemplateServiceAgreementTemplate } from "./EscrowAccessSecretStoreTemplate.serviceAgreementTemplate"
+
 export class EscrowAccessSecretStoreTemplate extends AgreementTemplate {
 
     public static async getInstance(): Promise<EscrowAccessSecretStoreTemplate> {
         return AgreementTemplate.getInstance("EscrowAccessSecretStoreTemplate", EscrowAccessSecretStoreTemplate)
+    }
+
+    public async getServiceAgreementTemplate() {
+        return escrowAccessSecretStoreTemplateServiceAgreementTemplate
     }
 
     /**
@@ -69,6 +75,7 @@ export class EscrowAccessSecretStoreTemplate extends AgreementTemplate {
             conditionIdLock,
             conditionIdAccess,
         )
+
         await this.createAgreement(
             agreementId,
             did,
