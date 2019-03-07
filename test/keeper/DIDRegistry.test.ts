@@ -50,40 +50,40 @@ describe("DIDRegistry", () => {
 
     })
 
-    describe("#getOwner()", () => {
+    // describe("#getOwner()", () => {
 
-        it("should get the owner of a did properly", async () => {
-            const ownerAccount: Account = (await ocean.getAccounts())[0]
-            const did = generateId()
-            const data = "my nice provider, is nice"
-            await didRegistry.registerAttribute(did, "0123456789abcdef", data, ownerAccount.getId())
+    //     it("should get the owner of a did properly", async () => {
+    //         const ownerAccount: Account = (await ocean.getAccounts())[0]
+    //         const did = generateId()
+    //         const data = "my nice provider, is nice"
+    //         await didRegistry.registerAttribute(did, "0123456789abcdef", data, ownerAccount.getId())
 
-            const owner = await didRegistry.getOwner(did)
+    //         const owner = await didRegistry.getOwner(did)
 
-            assert(owner === ownerAccount.getId(), `Got ${owner} but expected ${ownerAccount.getId()}`)
-        })
+    //         assert(owner === ownerAccount.getId(), `Got ${owner} but expected ${ownerAccount.getId()}`)
+    //     })
 
-        it("should get 0x00.. for a not registered did", async () => {
-            const owner = await didRegistry.getOwner("1234")
-            assert(owner === "0x0000000000000000000000000000000000000000")
-        })
+    //     it("should get 0x00.. for a not registered did", async () => {
+    //         const owner = await didRegistry.getOwner("1234")
+    //         assert(owner === "0x0000000000000000000000000000000000000000")
+    //     })
 
-    })
+    // })
 
-    describe("#getUpdateAt()", () => {
+    // describe("#getUpdateAt()", () => {
 
-        it("should the block number of the last update of the did attribute", async () => {
-            const ownerAccount: Account = (await ocean.getAccounts())[0]
-            const did = generateId()
-            const data = "my nice provider, is nice"
-            await didRegistry.registerAttribute(did, "0123456789abcdef", data, ownerAccount.getId())
+    //     it("should the block number of the last update of the did attribute", async () => {
+    //         const ownerAccount: Account = (await ocean.getAccounts())[0]
+    //         const did = generateId()
+    //         const data = "my nice provider, is nice"
+    //         await didRegistry.registerAttribute(did, "0123456789abcdef", data, ownerAccount.getId())
 
-            const updatedAt: number = await didRegistry.getUpdateAt(did)
+    //         const updatedAt: number = await didRegistry.getUpdateAt(did)
 
-            assert(updatedAt > 0)
-            Logger.log(typeof updatedAt)
-        })
+    //         assert(updatedAt > 0)
+    //         Logger.log(typeof updatedAt)
+    //     })
 
-    })
+    // })
 
 })

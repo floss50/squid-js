@@ -21,7 +21,8 @@ before_script:
   - ganache-cli --port 18545 > ganache-cli.log &
   - git clone https://github.com/oceanprotocol/barge
   - cd barge
-  - export KEEPER_VERSION=v0.6.12
+  - export KEEPER_VERSION=v0.8.1
+  - export KEEPER_OWNER_ROLE_ADDRESS="0xe2DD09d719Da89e5a3D0F2549c7E24566e947260"
   - bash -x start_ocean.sh --latest --no-brizo --no-pleuston --local-spree-node 2>&1 > start_ocean.log &
   - cd ..
   - ./scripts/unlock-spree-accounts.sh  2>&1 > /dev/null &

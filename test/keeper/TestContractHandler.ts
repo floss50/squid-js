@@ -22,16 +22,15 @@ export default class TestContractHandler extends ContractHandler {
         const didRegistryLibrary = await TestContractHandler.deployContract("DIDRegistryLibrary", deployerAddress)
 
         // Contracts
-        const token = await TestContractHandler.deployContract("OceanToken", deployerAddress, [deployerAddress])
+        const token = await TestContractHandler.deployContract("OceanToken", deployerAddress, [deployerAddress, deployerAddress])
 
         const dispenser = await TestContractHandler.deployContract("Dispenser", deployerAddress, [token.options.address, deployerAddress])
 
         // Add dispenser as Token minter
-        await token.methods.addMinter(dispenser.options.address)
-            .send({from: deployerAddress})
-
-
-        console.log(didRegistryLibrary.options.address)
+        if (!token.$initialized) {
+            await token.methods.addMinter(dispenser.options.address)
+                .send({from: deployerAddress})
+        }
 
         const didRegistry = await TestContractHandler.deployContract("DIDRegistry", deployerAddress, [deployerAddress], {
             DIDRegistryLibrary: didRegistryLibrary.options.address,
@@ -80,11 +79,11 @@ export default class TestContractHandler extends ContractHandler {
         from: string,
         args: any[] = [],
         tokens: {[name: string]: string} = {},
-    ): Promise<Contract> {
+    ): Promise<Contract & {$initialized: boolean}> {
 
         // dont redeploy if there is already something loaded
         if (ContractHandler.has(name)) {
-            return await ContractHandler.get(name)
+            return {...await ContractHandler.get(name), $initialized: true}
         }
 
         const web3 = Web3Provider.getWeb3()

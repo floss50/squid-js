@@ -37,17 +37,16 @@ describe("EventListener", () => {
                 })
 
             event.listen((events) => {
-
                 assert(events)
                 assert(events.length === 2)
-                done()
                 EventListener.unsubscribe(event)
+                done()
             })
 
             const {dispenser} = keeper
 
-            dispenser.requestTokens(400, acc.getId())
-            dispenser.requestTokens(400, acc.getId())
+            dispenser.requestTokens(10, acc.getId())
+            dispenser.requestTokens(10, acc.getId())
         })
     })
 
@@ -75,7 +74,7 @@ describe("EventListener", () => {
 
             const {dispenser} = keeper
 
-            dispenser.requestTokens(400, acc.getId())
+            dispenser.requestTokens(10, acc.getId())
         })
     })
 

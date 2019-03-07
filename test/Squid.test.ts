@@ -12,10 +12,6 @@ describe("Squid", () => {
         it("should expose Logger", async () => {
             assert(squid.Logger)
         })
-
-        it("should expose ServiceAgreement", async () => {
-            assert(squid.ServiceAgreement)
-        })
     })
 
 })
