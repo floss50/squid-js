@@ -16,7 +16,7 @@ import { Service } from "../ddo/Service"
 import ContractEvent from "../keeper/Event"
 import Config from "../models/Config"
 import SecretStoreProvider from "../secretstore/SecretStoreProvider"
-import Logger, { LogLevel } from "../utils/Logger"
+import { Logger, LogLevel } from "../utils/Logger"
 import Account from "./Account"
 import DID from "./DID"
 import ServiceAgreement from "./ServiceAgreements/ServiceAgreement"
@@ -36,6 +36,7 @@ export default class Ocean {
      */
     public static async getInstance(config: Config): Promise<Ocean> {
         // Must be defined on instance level, right now, calling getInstance twice is going to rewrite that
+        // WARN: is called on ConfigProvider.setConfig too (to work fine on test)
         Logger.setLevel(
             typeof config.verbose !== "number"
                 ? (config.verbose ? LogLevel.Log : LogLevel.None)

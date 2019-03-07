@@ -14,7 +14,7 @@ import Web3Provider from "./Web3Provider"
  * - Ocean Tokens: the intrinsic tokens circulated inside Ocean network, which is used in the voting of TCRs.
  * - Marketplace: the core marketplace where people can transact with each other with Ocean tokens.
  */
-export default class Keeper {
+export class Keeper {
 
     /**
      * Returns Keeper instance.
@@ -150,3 +150,5 @@ export default class Keeper {
             })
     }
 }
+
+export default Keeper

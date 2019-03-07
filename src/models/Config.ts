@@ -1,6 +1,7 @@
 import { LogLevel } from "../utils/Logger"
+export { LogLevel } from "../utils/Logger"
 
-export default class Config {
+export class Config {
     /* Aquarius Config */
     // the url to the aquarius
     public aquariusUri: string
@@ -30,3 +31,5 @@ export default class Config {
     /* Squid config */
     public verbose: boolean | LogLevel
 }
+
+export default Config

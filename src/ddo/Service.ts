@@ -1,6 +1,7 @@
 import { Condition } from "./Condition"
 import { Contract } from "./Contract"
 import { MetaData } from "./MetaData"
+import { ServiceAgreementTemplate } from "./ServiceAgreementTemplate"
 
 export type ServiceType = "Authorization" | "Metadata" | "Access" | "Compute" | "FitchainCompute"
 
@@ -22,11 +23,12 @@ export interface ServiceMetadata extends ServiceCommon {
 
 export interface ServiceAccess extends ServiceCommon {
     type: "Access"
+    name?: string,
+    description?: string
+    creator?: string
     templateId?: string
     purchaseEndpoint?: string
-    description?: string
-    serviceAgreementContract?: Contract
-    conditions?: Condition[]
+    serviceAgreementTemplate?: ServiceAgreementTemplate
 }
 
 export interface ServiceCompute extends ServiceCommon {
