@@ -1,13 +1,11 @@
 import { ServiceAgreementTemplateCondition } from "../../ddo/ServiceAgreementTemplate"
 import { DDO } from "../../ddo/DDO"
 import { ServiceAccess } from "../../ddo/Service"
-import Keeper from "../../keeper/Keeper"
 import Web3Provider from "../../keeper/Web3Provider"
 import ValuePair from "../../models/ValuePair"
 import Logger from "../../utils/Logger"
 import Account from "../Account"
-import DID from "../DID"
-import { signText } from "../../utils"
+import { signText, zeroX } from "../../utils"
 
 
 // TODO: move this class to helpers, it only contains pure functions
@@ -24,12 +22,18 @@ export default class ServiceAgreement {
         const service = ddo.findServiceById<"Access">(serviceDefinitionId)
         const values: ValuePair[][] = ServiceAgreement.getValuesFromService(service, valuesMap)
         const valueHashes: string[] = ServiceAgreement.createValueHashes(values)
-        const timeoutValues: number[] = ServiceAgreement.getTimeoutValuesFromService(service)
+        const timelockValues: number[] = ServiceAgreement.getTimeValuesFromService(service, "timelock")
+        const timeoutValues: number[] = ServiceAgreement.getTimeValuesFromService(service, "timeout")
 
-        const serviceAgreementHashSignature = await ServiceAgreement.createSAHashSignature(
-            service,
+        if (!service.templateId) {
+            throw new Error("TemplateId not found in DDO.")
+        }
+
+        const serviceAgreementHashSignature = await ServiceAgreement.createHashSignature(
+            service.templateId,
             serviceAgreementId,
             valueHashes,
+            timelockValues,
             timeoutValues,
             consumer,
         )
@@ -39,23 +43,22 @@ export default class ServiceAgreement {
         return serviceAgreementHashSignature
     }
 
-    private static async createSAHashSignature(
-        service: ServiceAccess,
+    public static async createHashSignature(
+        templateId: string,
         serviceAgreementId: string,
         valueHashes: string[],
+        timelockValues: number[],
         timeoutValues: number[],
         consumer: Account,
     ): Promise<string> {
 
-        if (!service.templateId) {
-            throw new Error("TemplateId not found in ddo.")
-        }
-
         const serviceAgreementHash = ServiceAgreement.hashServiceAgreement(
-            service.templateId,
+            templateId,
             serviceAgreementId,
             valueHashes,
-            timeoutValues)
+            timelockValues,
+            timeoutValues,
+        )
 
         let serviceAgreementHashSignature = await signText(serviceAgreementHash, consumer.getId(), consumer.getPassword())
 
@@ -83,26 +86,28 @@ export default class ServiceAgreement {
         return hash
     }
 
-    private static hashServiceAgreement(
+    public static hashServiceAgreement(
         serviceAgreementTemplateId: string,
         serviceAgreementId: string,
         valueHashes: string[],
+        timelocks: number[],
         timeouts: number[],
     ): string {
 
         const args = [
-            {type: "bytes32", value: serviceAgreementTemplateId},
-            {type: "bytes32[]", value: valueHashes},
+            {type: "address", value: zeroX(serviceAgreementTemplateId)},
+            {type: "bytes32[]", value: valueHashes.map(zeroX)},
+            {type: "uint256[]", value: timelocks},
             {type: "uint256[]", value: timeouts},
-            {type: "bytes32", value: "0x" + serviceAgreementId},
+            {type: "bytes32", value: zeroX(serviceAgreementId)},
         ]
 
         return (Web3Provider as any).getWeb3().utils.soliditySha3(...args).toString("hex")
     }
 
-    private static getTimeoutValuesFromService(service: ServiceAccess): number[] {
+    private static getTimeValuesFromService(service: ServiceAccess, type: "timeout" | "timelock"): number[] {
         const timeoutValues: number[] = service.serviceAgreementTemplate.conditions
-            .map((condition: ServiceAgreementTemplateCondition) => condition.timeout)
+            .map((condition: ServiceAgreementTemplateCondition) => condition[type])
 
         return timeoutValues
     }

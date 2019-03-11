@@ -54,14 +54,44 @@ export default class OceanAgreements {
         serviceDefinitionId: string,
         consumer: Account,
     ): Promise<AgreementPreparionResult> {
-
         const d: DID = DID.parse(did as string)
         const ddo = await AquariusProvider.getAquarius().retrieveDDO(d)
         const agreementId: string = generateId()
 
-        const signature = await ServiceAgreement.signServiceAgreement(ddo, serviceDefinitionId, agreementId, consumer)
+        const valuesMap = await this.getValuesMapForPrepare(ddo, agreementId, consumer.getId())
+
+        const signature = await ServiceAgreement.signServiceAgreement(ddo, serviceDefinitionId, agreementId, valuesMap, consumer)
 
         return {agreementId, signature}
+    }
+
+    // TODO: this map depends on the template, this generation should be reponsability of the template
+    private async getValuesMapForPrepare(ddo: DDO, agreementId: string, consumer: string): Promise<{[value: string]: string}> {
+        const keeper = await Keeper.getInstance()
+        const ddoOwner = ddo.proof && ddo.proof.creator
+        const amount = ddo.findServiceByType("Metadata").metadata.base.price
+
+        let lockCondition
+        let releaseCondition
+
+        try {
+            lockCondition = await keeper.conditions.lockRewardCondition.hashValues(ddoOwner, amount)
+        } catch(e) { }
+
+        try {
+            releaseCondition = await keeper.conditions.accessSecretStoreCondition.hashValues(ddo.shortId(), consumer)
+        } catch(e) { }
+
+        return {
+            rewardAddress: ddoOwner,
+            amount: amount.toString(),
+            documentId: ddo.shortId(),
+            grantee: consumer,
+            receiver: consumer,
+            sender: ddoOwner,
+            lockCondition,
+            releaseCondition,
+        }
     }
 
     /**
@@ -82,10 +112,10 @@ export default class OceanAgreements {
         const result = await BrizoProvider
             .getBrizo()
             .initializeServiceAgreement(
-                did,
-                agreementId,
+                didPrefixed(did),
+                zeroX(agreementId),
                 serviceDefinitionId,
-                signature,
+                zeroX(signature),
                 consumer.getId(),
             )
 
