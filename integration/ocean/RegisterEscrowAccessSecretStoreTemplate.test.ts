@@ -2,7 +2,7 @@ import { assert } from 'chai'
 
 import { config } from "../config"
 
-import { Ocean, templates, conditions, generateId, Keeper, Account } from '../../src' // @oceanprotocol/squid
+import { Ocean, templates, conditions, utils, Keeper, Account } from '../../src' // @oceanprotocol/squid
 
 const { LockRewardCondition, EscrowReward, AccessSecretStoreCondition } = conditions
 const { EscrowAccessSecretStoreTemplate } = templates
@@ -57,8 +57,8 @@ describe("Register Escrow Access Secret Store Template", () => {
     })
 
     describe("Full flow", () => {
-        const agreementId = `0x${generateId()}`
-        const did = `0x${generateId()}`
+        const agreementId = `0x${utils.generateId()}`
+        const did = `0x${utils.generateId()}`
 
         let conditionIdAccess: string
         let conditionIdLock: string
@@ -164,7 +164,7 @@ describe("Register Escrow Access Secret Store Template", () => {
     })
 
     describe("Short flow", () => {
-        const did = `0x${generateId()}`
+        const did = `0x${utils.generateId()}`
 
         let agreementId
 

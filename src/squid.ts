@@ -9,11 +9,11 @@ import EventListener from "./keeper/EventListener"
 
 import * as templates from "./keeper/contracts/templates"
 import * as conditions from "./keeper/contracts/conditions"
+import * as utils from "./utils"
 
 // Exports
 export * from "./ddo/DDO"
 export * from "./ddo/MetaData"
-export { generateId } from "./utils/GeneratorHelpers"
 
 export { AgreementTemplate } from "./keeper/contracts/templates"
 export { Condition } from "./keeper/contracts/conditions"
@@ -31,4 +31,5 @@ export {
 
     conditions,
     templates,
+    utils,
 }
