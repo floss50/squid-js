@@ -13,6 +13,10 @@ export default class OceanToken extends ContractBase {
         return this.sendFrom("approve", [to, price], from)
     }
 
+    public async decimals(): Promise<number> {
+        return this.call("decimals", [])
+    }
+
     public async balanceOf(address: string): Promise<number> {
         return this.call("balanceOf", [address])
             .then((balance: string) => new BigNumber(balance).toNumber())

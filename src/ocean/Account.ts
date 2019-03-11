@@ -33,7 +33,8 @@ export default class Account extends OceanBase {
      * @return {Promise<number>}
      */
     public async getOceanBalance(): Promise<number> {
-        return (await Keeper.getInstance()).token.balanceOf(this.id)
+        const token = (await Keeper.getInstance()).token
+        return await token.balanceOf(this.id) / (10 ** await token.decimals())
     }
 
     /**
