@@ -13,11 +13,11 @@ function fillParameterWithDDO(parameter: ServiceAgreementTemplateParameter, ddo:
                 return ddo.shortId()
         }
 
-        return null
+        return ""
     }
     const value = getValue(parameter.name.replace(/^_/, ""))
 
-    return {...parameter, value}
+    return {...parameter, value: parameter.type.includes("int") ? Number(value) : value}
 }
 
 /**

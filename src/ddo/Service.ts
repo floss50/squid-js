@@ -1,5 +1,3 @@
-import { Condition } from "./Condition"
-import { Contract } from "./Contract"
 import { MetaData } from "./MetaData"
 import { ServiceAgreementTemplate } from "./ServiceAgreementTemplate"
 

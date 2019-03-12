@@ -164,12 +164,13 @@ describe("Register Escrow Access Secret Store Template", () => {
     })
 
     describe("Short flow", () => {
-        const did = `0x${utils.generateId()}`
+        const did = utils.generateId()
 
         let agreementId
 
         it("should register a DID", async () => {
-            await keeper.didRegistry.registerAttribute(did.replace("0x", ""), checksum, url, publisher.getId())
+            // This part is executed inside Ocean.assets.create()
+            await keeper.didRegistry.registerAttribute(did, checksum, url, publisher.getId())
         })
 
         it("should create a new agreement (short way)", async () => {

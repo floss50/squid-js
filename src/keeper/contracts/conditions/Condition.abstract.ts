@@ -39,6 +39,6 @@ export abstract class Condition extends ContractBase {
     }
 
     abortByTimeOut(agreementId: string, from?: string) {
-        return this.sendFrom("requestTokens", [zeroX(agreementId)], from)
+        return this.sendFrom("abortByTimeOut", [zeroX(agreementId)], from)
     }
 }

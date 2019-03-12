@@ -1,7 +1,9 @@
 import { AgreementTemplate } from "./AgreementTemplate.abstract"
 import { LockRewardCondition, EscrowReward, AccessSecretStoreCondition } from '../conditions'
 import DIDRegistry from '../DIDRegistry'
-import { generateId } from '../../../utils/GeneratorHelpers'
+import Keeper from "../../Keeper"
+import { DDO } from '../../../ddo/DDO'
+import { generateId, zeroX } from '../../../utils'
 
 import { escrowAccessSecretStoreTemplateServiceAgreementTemplate } from "./EscrowAccessSecretStoreTemplate.serviceAgreementTemplate"
 
@@ -62,7 +64,7 @@ export class EscrowAccessSecretStoreTemplate extends AgreementTemplate {
         const lockRewardCondition = await LockRewardCondition.getInstance()
         const escrowReward = await EscrowReward.getInstance()
 
-        const agreementId = `0x${generateId()}`
+        const agreementId = zeroX(generateId())
         const publisher = await didRegistry.getDIDOwner(did)
 
         const conditionIdAccess = await accessSecretStoreCondition.generateIdHash(agreementId, did, from)
@@ -86,5 +88,34 @@ export class EscrowAccessSecretStoreTemplate extends AgreementTemplate {
         )
 
         return agreementId
+    }
+
+
+    async getServiceAgreementTemplateValuesMap(ddo: DDO, agreementId: string, consumer: string): Promise<{[value: string]: string}> {
+        const keeper = await Keeper.getInstance()
+        const ddoOwner = ddo.proof && ddo.proof.creator
+        const amount = ddo.findServiceByType("Metadata").metadata.base.price
+
+        let lockCondition
+        let releaseCondition
+
+        try {
+            lockCondition = await keeper.conditions.lockRewardCondition.hashValues(ddoOwner, amount)
+        } catch(e) { }
+
+        try {
+            releaseCondition = await keeper.conditions.accessSecretStoreCondition.hashValues(ddo.shortId(), consumer)
+        } catch(e) { }
+
+        return {
+            rewardAddress: ddoOwner,
+            amount: amount.toString(),
+            documentId: ddo.shortId(),
+            grantee: consumer,
+            receiver: consumer,
+            sender: ddoOwner,
+            lockCondition,
+            releaseCondition,
+        }
     }
 }

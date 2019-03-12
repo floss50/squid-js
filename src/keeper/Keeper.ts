@@ -2,7 +2,7 @@ import DIDRegistry from "./contracts/DIDRegistry"
 import Dispenser from "./contracts/Dispenser"
 import OceanToken from "./contracts/Token"
 import { Condition, LockRewardCondition, EscrowReward, AccessSecretStoreCondition } from "./contracts/conditions"
-import { EscrowAccessSecretStoreTemplate } from "./contracts/templates"
+import { AgreementTemplate, EscrowAccessSecretStoreTemplate } from "./contracts/templates"
 import { TemplateStoreManager } from "./contracts/managers"
 
 import Web3Provider from "./Web3Provider"
@@ -102,6 +102,11 @@ export class Keeper {
     public getConditionByAddress(address: string): Condition {
         return Object.values(this.conditions)
             .find(condition => condition.getAddress() === address)
+    }
+
+    public getTemplateByName(name: string): AgreementTemplate {
+        return Object.values(this.templates)
+            .find(template => template.contractName === name)
     }
 
     /**

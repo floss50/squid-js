@@ -9,7 +9,7 @@ export default abstract class ContractBase {
     protected static instance = null
 
     private contract: Contract = null
-    private contractName: string
+    contractName: string
 
     constructor(contractName) {
         this.contractName = contractName
